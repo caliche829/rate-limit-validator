@@ -1,0 +1,12 @@
+version: '3.4'
+
+name: ratelimitvalidatorservices
+services:
+  ratelimitvalidatordb:
+    image: mcr.microsoft.com/mssql/server
+    
+  ratelimitvalidator.api:
+    image: ${DOCKER_REGISTRY-}ratelimitvalidator.api
+    build:
+      context: .
+      dockerfile: RateLimitValidator.API/Dockerfile
