@@ -1,0 +1,48 @@
+<div class="container mt-5">
+    <div class="mb-3">
+      <input type="text" class="form-control" placeholder="PhoneNumber" [(ngModel)]="phoneNumber">
+    </div>
+    
+    <div class="mb-3">
+		<div class="input-group">
+			<input
+				class="form-control"
+				placeholder="yyyy-mm-dd"
+				name="dp"
+				ngbDatepicker
+				#d="ngbDatepicker"
+                [(ngModel)]="date"
+			/>
+			<button class="btn btn-outline-secondary bi bi-calendar3" (click)="d.toggle()" type="button"></button>
+		</div>
+    </div>
+
+    <div class="mb-3">
+      <ngb-timepicker [(ngModel)]="time" [seconds]="true"/>
+    </div>
+
+    <div class="mb-3">
+        <button class="btn btn-primary" (click)="loadRecords()" type="button">Filter</button>
+    </div>
+  
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th scope="col">PhoneNumber</th>
+          <th scope="col">Time</th>
+          <th scope="col">Total Success</th>
+          <th scope="col">Total Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let record of records">
+          <td>{{record.phoneNumber}}</td>
+          <td>{{record.time | date : "YYYY-MM-dd hh:mm:ss"}}</td>
+          <td style="text-align: center;">{{record.totalSuccess}}</td>
+          <td style="text-align: center;">{{record.totalError}}</td>
+        </tr>
+      </tbody>
+    </table>
+  
+    <ngb-pagination [collectionSize]="totalRecords" [(page)]="page" [pageSize]="pageSize" (pageChange)="onPageChange($event)"></ngb-pagination>
+  </div>
