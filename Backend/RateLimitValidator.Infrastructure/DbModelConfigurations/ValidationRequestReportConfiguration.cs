@@ -8,6 +8,8 @@ public class ValidationRequestReportConfiguration : IEntityTypeConfiguration<Val
 {
     public void Configure(EntityTypeBuilder<ValidationRequestReport> builder)
     {
-        builder.HasNoKey();
+        builder
+            .ToView(nameof(ValidationRequestReport))
+            .HasNoKey();
     }
 }

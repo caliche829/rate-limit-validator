@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -35,9 +34,9 @@ namespace RateLimitValidator.Infrastructure.Migrations
 SELECT
     PhoneNumber
     ,CAST(FORMAT([Time],''yyyy-MM-dd HH:mm:ss'') AS datetime) AS [Time]
-    , COUNT(IIF(IsSuccess = 1, 1, 0)) TotalSuccess
-    , COUNT(IIF(IsSuccess = 1, 1, 0)) TotalError
-FROM [ratelimitvalidatordb].[dbo].[ValidationRequests]
+    , SUM(IIF(IsSuccess = 1, 1, 0)) TotalSuccess
+    , SUM(IIF(IsSuccess = 0, 1, 0)) TotalError
+FROM [dbo].[ValidationRequests]
 GROUP BY 
     PhoneNumber
     ,CAST(FORMAT([Time],''yyyy-MM-dd HH:mm:ss'') AS datetime)

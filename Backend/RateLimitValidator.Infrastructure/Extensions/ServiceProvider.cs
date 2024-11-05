@@ -16,6 +16,7 @@ public static class ServiceProvider
         services.RegisterJobs(configuration);
         services.AddSingleton<IRateLimitValidatorService, RateLimitValidatorService>();
         services.AddSingleton<IRegisterRequestService, RegisterRequestService>();
+        services.AddScoped<IRequestReportService, RequestReportService>();
 
         return services;
     }

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
-using System;
 
 namespace RateLimitValidator.Application.Extensions;
 
@@ -10,6 +9,7 @@ public static class AppUse
     {
         app
             .UsingSwagger()
+            .UsingCors()
             .UsingHttpsRedirection()
             .UsingRouting()
             .UsingAuthorization()
@@ -62,6 +62,16 @@ public static class AppUse
         {
             endpoints.MapControllers();
         });
+
+        return app;
+    }
+
+    public static IApplicationBuilder UsingCors(this IApplicationBuilder app)
+    {
+        app.UseCors(x => x
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
 
         return app;
     }

@@ -1,34 +1,23 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RateLimitValidator.Domain.Interfaces;
+using RateLimitValidator.Domain.Models;
 
 namespace RateLimitValidator.API.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class ReportController(
     ILogger<ReportController> logger,
-    IRateLimitValidatorService rateLimiterService
+    IRequestReportService requestReportService
 ) : ControllerBase
 {
-
     private readonly ILogger<ReportController> _logger = logger;
-    private readonly IRateLimitValidatorService _rateLimiterService = rateLimiterService;
+    private readonly IRequestReportService _requestReportService = requestReportService;
 
-    [HttpPost("")]
-    public IActionResult CheckMessageSend(string phoneNumber)
+    [HttpPost]
+    public async Task<IActionResult> GetReportRequests([FromBody] RequestReportQuery requestReportQuery)
     {
-        string errorMessage = _rateLimiterService.CanSendMessage(phoneNumber);
-        
-        if (!string.IsNullOrEmpty(errorMessage))
-        {
-            return Problem
-            (
-                detail: errorMessage,
-                statusCode: (int?)System.Net.HttpStatusCode.TooManyRequests,
-                title: errorMessage
-            );
-        }
-
-        return Ok();
+        var result = await _requestReportService.GetReport(requestReportQuery);
+        return Ok(result);
     }
 }

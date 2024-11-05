@@ -17,7 +17,6 @@ public static class ServiceProvider
         services
             .RegisterControllers()
             .RegisterLog(configuration, hostBuilder)
-            .RegisterMemoryCache()
             .RegisterRedis(configuration)
             .RegisterRateLimitConfig(configuration)
             .RegisterGlobalErrorHandler()
@@ -51,13 +50,6 @@ public static class ServiceProvider
         });
 
         hostBuilder.UseSerilog();
-
-        return services;
-    }
-
-    public static IServiceCollection RegisterMemoryCache(this IServiceCollection services)
-    {
-        services.AddMemoryCache();
 
         return services;
     }
