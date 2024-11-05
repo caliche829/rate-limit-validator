@@ -12,10 +12,13 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["RateLimitValidator.API.csproj", "."]
-RUN dotnet restore "./RateLimitValidator.API.csproj"
+COPY ["RateLimitValidator.API/RateLimitValidator.API.csproj", "RateLimitValidator.API/"]
+COPY ["RateLimitValidator.Application/RateLimitValidator.Application.csproj", "RateLimitValidator.Application/"]
+COPY ["RateLimitValidator.Domain/RateLimitValidator.Domain.csproj", "RateLimitValidator.Domain/"]
+COPY ["RateLimitValidator.Infrastructure/RateLimitValidator.Infrastructure.csproj", "RateLimitValidator.Infrastructure/"]
+RUN dotnet restore "./RateLimitValidator.API/RateLimitValidator.API.csproj"
 COPY . .
-WORKDIR "/src/."
+WORKDIR "/src/RateLimitValidator.API"
 RUN dotnet build "./RateLimitValidator.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage

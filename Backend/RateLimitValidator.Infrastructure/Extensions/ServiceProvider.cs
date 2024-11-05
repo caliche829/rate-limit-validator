@@ -30,4 +30,14 @@ public static class ServiceProvider
 
         return services;
     }
+
+    public static void RunMigrations(this IServiceProvider services)
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+
+        if (context.Database.GetPendingMigrations().Any())
+        {
+            context.Database.Migrate();
+        }
+    }
 }

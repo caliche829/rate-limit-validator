@@ -11,6 +11,7 @@ public class RegisterRequestService(ApplicationDbContext dbContext) : IRegisterR
     {
         _dbContext.ValidationRequests.Add(new ValidationRequest()
         {
+            Id = Guid.NewGuid(),
             PhoneNumber = phoneNumber,
             Time = time,
             IsSuccess = isSuccess

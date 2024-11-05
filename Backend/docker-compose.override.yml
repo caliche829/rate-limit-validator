@@ -1,5 +1,4 @@
-version: '3.4'
-
+name: ratelimitvalidatorservices
 services:
 
   ratelimitvalidatordb:
@@ -18,11 +17,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionStrings:DefaultConnection=Server=ratelimitvalidatordb;Database=ratelimitvalidatordb;User Id=sa;Password=P123456!!;TrustServerCertificate=True;
     ports:
       - "32760:8080"
-      - "32761:8081"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro

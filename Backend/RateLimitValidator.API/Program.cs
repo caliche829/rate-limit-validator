@@ -7,6 +7,13 @@ builder.Services.BaseRegister(builder.Configuration, builder.Host).RegisterServi
 
 var app = builder.Build();
 
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    services.RunMigrations();
+}
+
 app.BaseUse(builder.Configuration);
 
 app.Run();
