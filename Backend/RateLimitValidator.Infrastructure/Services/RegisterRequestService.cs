@@ -7,14 +7,15 @@ public class RegisterRequestService(ApplicationDbContext dbContext) : IRegisterR
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
 
-    public void AddRequest(string phoneNumber, DateTime time, bool isSuccess)
+    public void AddRequest(string phoneNumber, DateTime time, bool isSuccess, string? errorMessage)
     {
         _dbContext.ValidationRequests.Add(new ValidationRequest()
         {
             Id = Guid.NewGuid(),
             PhoneNumber = phoneNumber,
             Time = time,
-            IsSuccess = isSuccess
+            IsSuccess = isSuccess,
+            ErrorMessage = errorMessage
         });
 
         _dbContext.SaveChanges();

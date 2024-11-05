@@ -28,21 +28,28 @@ public class RateLimitValidatorService : IRateLimitValidatorService
     {
         lock (_lock)
         {
-            DateTime now = DateTime.UtcNow;
-            if (_accountMessageCount >= _config.MaxMessagesPerAccount)
+            //Get the datetime without milliseconds
+            DateTime now = DateTime.UtcNow; // DateTime.Parse(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
+            string? errorMessage = null;
+
+            if (_accountMessageCount > _config.MaxMessagesPerAccount)
             {
-                _registerRequestService.AddRequest(phoneNumber, now, false);
-                return "Too many request per account per second";
+                errorMessage = "Too many request per account per second";
+                _registerRequestService.AddRequest(phoneNumber, now, false, errorMessage);
+
+                return errorMessage;
             }
 
-            if (_numberMessageCount.TryGetValue(phoneNumber, out int count) && count >= _config.MaxMessagesPerNumber)
+            if (_numberMessageCount.TryGetValue(phoneNumber, out int count) && count > _config.MaxMessagesPerNumber)
             {
-                _registerRequestService.AddRequest(phoneNumber, now, false);
-                return $"Too many request per phoneNumber {phoneNumber} per second";
+                errorMessage = $"Too many request per phoneNumber {phoneNumber} per second";
+                _registerRequestService.AddRequest(phoneNumber, now, false, errorMessage);
+
+                return errorMessage;
             }
 
             RecordMessage(phoneNumber);
-            _registerRequestService.AddRequest(phoneNumber, now, true);
+            _registerRequestService.AddRequest(phoneNumber, now, true, errorMessage);
 
             return string.Empty;
         }

@@ -18,7 +18,8 @@ namespace RateLimitValidator.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     PhoneNumber = table.Column<string>(type: "varchar(200)", nullable: false),
                     Time = table.Column<DateTime>(type: "datetime", nullable: false),
-                    IsSuccess = table.Column<bool>(type: "bit", nullable: false)
+                    IsSuccess = table.Column<bool>(type: "bit", nullable: false),
+                    ErrorMessage = table.Column<string>(type: "varchar(200)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -29,6 +30,18 @@ namespace RateLimitValidator.Infrastructure.Migrations
                 name: "IX_ValidationRequest_PhoneNumber_Time_Ascending",
                 table: "ValidationRequests",
                 columns: new[] { "PhoneNumber", "Time" });
+
+            migrationBuilder.Sql(@"exec('create view dbo.ValidationRequestReport as 
+SELECT
+    PhoneNumber
+    ,CAST(FORMAT([Time],''yyyy-MM-dd HH:mm:ss'') AS datetime) AS [Time]
+    , COUNT(IIF(IsSuccess = 1, 1, 0)) TotalSuccess
+    , COUNT(IIF(IsSuccess = 1, 1, 0)) TotalError
+FROM [ratelimitvalidatordb].[dbo].[ValidationRequests]
+GROUP BY 
+    PhoneNumber
+    ,CAST(FORMAT([Time],''yyyy-MM-dd HH:mm:ss'') AS datetime)
+');");
         }
 
         /// <inheritdoc />
@@ -36,6 +49,8 @@ namespace RateLimitValidator.Infrastructure.Migrations
         {
             migrationBuilder.DropTable(
                 name: "ValidationRequests");
+
+            migrationBuilder.Sql("exec('drop view dbo.ValidationRequestReport');");
         }
     }
 }

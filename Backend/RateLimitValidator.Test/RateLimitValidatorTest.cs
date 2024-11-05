@@ -4,6 +4,9 @@ using RateLimitValidator.Domain.Configuration;
 using NBomber.CSharp;
 using NBomber.Http.CSharp;
 using NBomber.Contracts.Stats;
+using RateLimitValidator.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 
 namespace RateLimitValidator.Test;
 
@@ -20,12 +23,14 @@ public class RateLimitValidatorTest : IClassFixture<WebApplicationFactory< Progr
 
         ArgumentNullException.ThrowIfNull(rateLimitConfig);
 
+        ApplicationDbContext? dbContext = _factory.Services.GetService(typeof(ApplicationDbContext)) as ApplicationDbContext;
+
         var httpClient = _factory.CreateClient();
 
         Random rnd = new Random();
         string phoneNumber = rnd.Next().ToString();
 
-        int expectedFailures = 1;
+        int expectedFailures = 0;
 
         var simulation = Simulation.Inject(
             rate: rateLimitConfig.MaxMessagesPerNumber,
@@ -39,16 +44,21 @@ public class RateLimitValidatorTest : IClassFixture<WebApplicationFactory< Progr
             return response;
         })
         .WithoutWarmUp()
-        .WithLoadSimulations(simulation);
+        .WithLoadSimulations(simulation)
+        .WithClean(context =>
+        {
+            dbContext?.ValidationRequests
+                .Where(x => x.PhoneNumber == phoneNumber)
+                .ExecuteDeleteAsync();
+            return Task.CompletedTask;
+        });
 
         NodeStats nodeStats = NBomberRunner.RegisterScenarios(scenario)
                          .WithReportFileName(nameof(ShouldAllowSendByPhoneNumber))
                          .WithReportFormats(ReportFormat.Html, ReportFormat.Txt)
                      .Run();
 
-        //Some cases the next batch is sent in the same second as the first batch,
-        //that cause a rejection of the first request of the second batch
-        Assert.True(nodeStats.AllFailCount <= expectedFailures);
+        Assert.Equal(nodeStats.AllFailCount, expectedFailures);
     }
 
     [Fact]
@@ -59,12 +69,16 @@ public class RateLimitValidatorTest : IClassFixture<WebApplicationFactory< Progr
 
         ArgumentNullException.ThrowIfNull(rateLimitConfig);
 
+        ApplicationDbContext? dbContext = _factory.Services.GetService(typeof(ApplicationDbContext)) as ApplicationDbContext;
+
+        BlockingCollection<string> phoneNumbersGenerated = new BlockingCollection<string>();
+
         var httpClient = _factory.CreateClient();
 
         Random rnd = new Random();
         string phoneNumber;
 
-        int expectedFailures = 1;
+        int expectedFailures = 0;
 
         var simulation = Simulation.Inject(
             rate: rateLimitConfig.MaxMessagesPerAccount,
@@ -74,21 +88,28 @@ public class RateLimitValidatorTest : IClassFixture<WebApplicationFactory< Progr
         var scenario = Scenario.Create("http_scenario", async context =>
         {
             phoneNumber = rnd.Next().ToString();
+            phoneNumbersGenerated.Add(phoneNumber);
             var request = Http.CreateRequest("GET", string.Format(CheckEndpoint, phoneNumber));
             var response = await Http.Send(httpClient, request);
             return response;
         })
         .WithoutWarmUp()
-        .WithLoadSimulations(simulation);
+        .WithLoadSimulations(simulation)
+        .WithClean(context =>
+        {
+            var phoneNumbers = phoneNumbersGenerated.ToList();
+            dbContext?.ValidationRequests
+                .Where(x => phoneNumbers.Contains(x.PhoneNumber))
+                .ExecuteDeleteAsync();
+            return Task.CompletedTask;
+        });
 
         NodeStats nodeStats = NBomberRunner.RegisterScenarios(scenario)
                          .WithReportFileName(nameof(ShouldAllowSendByAccount))
                          .WithReportFormats(ReportFormat.Html, ReportFormat.Txt)
                      .Run();
 
-        //Some cases the next batch is sent in the same second as the first batch,
-        //that cause a rejection of the first request of the second batch
-        Assert.True(nodeStats.AllFailCount <= expectedFailures);
+        Assert.Equal(nodeStats.AllFailCount, expectedFailures);
     }
 
     [Fact]
@@ -97,6 +118,8 @@ public class RateLimitValidatorTest : IClassFixture<WebApplicationFactory< Progr
         RateLimitConfig? rateLimitConfig = (_factory.Services.GetService(typeof(IOptions<RateLimitConfig>)) as IOptions<RateLimitConfig>)?.Value;
 
         ArgumentNullException.ThrowIfNull(rateLimitConfig);
+
+        ApplicationDbContext? dbContext = _factory.Services.GetService(typeof(ApplicationDbContext)) as ApplicationDbContext;
 
         var httpClient = _factory.CreateClient();
 
@@ -120,14 +143,23 @@ public class RateLimitValidatorTest : IClassFixture<WebApplicationFactory< Progr
             return response;
         })
         .WithoutWarmUp()
-        .WithLoadSimulations(simulation);
+        .WithLoadSimulations(simulation)
+        .WithClean(context =>
+        {
+            dbContext?.ValidationRequests
+                .Where(x => x.PhoneNumber == phoneNumber)
+                .ExecuteDeleteAsync();
+            return Task.CompletedTask;
+        });
 
         NodeStats nodeStats = NBomberRunner.RegisterScenarios(scenario)
                          .WithReportFileName(nameof(ShouldThrowRateLimitErrorByPhoneNumber))
                          .WithReportFormats(ReportFormat.Html, ReportFormat.Txt)
                      .Run();
 
-        Assert.Equal(nodeStats.AllFailCount, expectedFailures);
+        //Some cases the next batch is sent in the same second as the first batch,
+        //that cause a rejection of the first request of the second batch
+        Assert.True(nodeStats.AllFailCount <= expectedFailures);
     }
 
     [Fact]
@@ -137,6 +169,10 @@ public class RateLimitValidatorTest : IClassFixture<WebApplicationFactory< Progr
         RateLimitConfig? rateLimitConfig = (_factory.Services.GetService(typeof(IOptions<RateLimitConfig>)) as IOptions<RateLimitConfig>)?.Value;
 
         ArgumentNullException.ThrowIfNull(rateLimitConfig);
+
+        ApplicationDbContext? dbContext = _factory.Services.GetService(typeof(ApplicationDbContext)) as ApplicationDbContext;
+
+        BlockingCollection<string> phoneNumbersGenerated = new BlockingCollection<string>();
 
         var httpClient = _factory.CreateClient();
 
@@ -156,18 +192,29 @@ public class RateLimitValidatorTest : IClassFixture<WebApplicationFactory< Progr
         var scenario = Scenario.Create("http_scenario", async context =>
         {
             phoneNumber = rnd.Next().ToString();
+            phoneNumbersGenerated.Add(phoneNumber);
             var request = Http.CreateRequest("GET", string.Format(CheckEndpoint, phoneNumber));
             var response = await Http.Send(httpClient, request);
             return response;
         })
         .WithoutWarmUp()
-        .WithLoadSimulations(simulation);
+        .WithLoadSimulations(simulation)
+        .WithClean(context =>
+        {
+            var phoneNumbers = phoneNumbersGenerated.ToList();
+            dbContext?.ValidationRequests
+                .Where(x => phoneNumbers.Contains(x.PhoneNumber))
+                .ExecuteDeleteAsync();
+            return Task.CompletedTask;
+        });
 
         NodeStats nodeStats = NBomberRunner.RegisterScenarios(scenario)
                          .WithReportFileName(nameof(ShouldThrowRateLimitErrorByAccount))
                          .WithReportFormats(ReportFormat.Html, ReportFormat.Txt)
                      .Run();
 
-        Assert.Equal(nodeStats.AllFailCount, expectedFailures);
+        //Some cases the next batch is sent in the same second as the first batch,
+        //that cause a rejection of the first request of the second batch
+        Assert.True(nodeStats.AllFailCount <= expectedFailures);
     }
 }

@@ -5,16 +5,16 @@ namespace RateLimitValidator.API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class RateLimitValidatorController(
-    ILogger<RateLimitValidatorController> logger,
+public class ReportController(
+    ILogger<ReportController> logger,
     IRateLimitValidatorService rateLimiterService
 ) : ControllerBase
 {
 
-    private readonly ILogger<RateLimitValidatorController> _logger = logger;
+    private readonly ILogger<ReportController> _logger = logger;
     private readonly IRateLimitValidatorService _rateLimiterService = rateLimiterService;
 
-    [HttpGet("check")]
+    [HttpPost("")]
     public IActionResult CheckMessageSend(string phoneNumber)
     {
         string errorMessage = _rateLimiterService.CanSendMessage(phoneNumber);
