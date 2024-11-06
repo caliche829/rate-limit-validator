@@ -26,6 +26,12 @@ services:
       - ratelimitvalidatordb
     networks:
       - ratelimitvalidator_network
+    
+  ratelimitvalidator.ui:
+    ports:
+      - "4340:80"
+    depends_on:
+      - ratelimitvalidator.api
 
 networks:
   ratelimitvalidator_network:

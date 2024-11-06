@@ -8,3 +8,9 @@ services:
     build:
       context: .
       dockerfile: RateLimitValidator.API/Dockerfile
+    
+  ratelimitvalidator.ui:
+    image: ${DOCKER_REGISTRY-}ratelimitvalidator.ui
+    build:
+      context: ../Frontend/request-report
+      dockerfile: Dockerfile
